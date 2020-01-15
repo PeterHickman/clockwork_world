@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Test</title>
+        <script src="/assets/aframe.min.js"></script>
+        <script src="/assets/trees.js"></script>
+    </head>
+
+    <body>
+        <a-scene>
+            <!-- Asset Management System -->
+            <a-assets>
+                <img id="floor" src="/assets/grass/grass01.jpg">
+                <img id="floor-nrm" src="/assets/grass/grass01_n.jpg">
+
+                <img id="sky" src="/assets/sky/clear-sunny-sky.jpg">
+
+                <a-asset-item id="tree-obj" src="/assets/elm_tree/ElmTree.obj"></a-asset-item>
+                <a-asset-item id="tree-mtl" src="/assets/elm_tree/ElmTree.mtl"></a-asset-item>
+
+                <a-asset-item id="stump-obj" src="/assets/tree_stump/treeStump.obj"></a-asset-item>
+                <a-asset-item id="stump-mtl" src="/assets/tree_stump/treeStump.mtl"></a-asset-item>
+            </a-assets>
+
+            <!-- Ground -->
+            <a-plane material="
+                        color: #999999;
+                        src: #floor;
+                        repeat: 100 100;
+                        normal-map: #floor-nrm;
+                        normal-texture-repeat: 100 100;
+                        roughness: 0.7;
+                     "
+                     rotation="-90 0 0"
+                     scale="100 100 1"
+                     shadow="receive: true"
+            >
+            </a-plane>
+
+            <a-text id="debug" value="XXXXXXXX" negate="false" scale="2 2 1" position="-2 2 -4"></a-text>
+
+            <!-- Sky -->
+            <a-sky src="#sky"></a-sky>
+
+            <!-- Source of light -->
+            <a-entity id="ambient-light" light="type: ambient; color: #05b;">
+            </a-entity>
+
+            <a-entity id="point-light" light="type: point; color: #fff; intensity: 1.0; castShadow: true;" position="0 100 0">
+            </a-entity>
+
+            <a-sphere id="sun" color="#fff" radius="5" position="0 110 0" light="type: ambient; color: #fff; intensity: 1.0;">
+            </a-sphere>
+
+            <!-- A Camera at an adult height -->
+            <a-entity>
+                <a-camera user-height="1.6">
+                </a-camera>
+            </a-entity>
+        </a-scene>
+
+        <script>
+            var sun_degree = 0;
+            var daytime = true;
+            const sun_interval =3000;
+            const sun_movement = 1;
+
+            function is_daytime() {
+                return (sun_degree < 97) || (sun_degree > 265);
+            }
+
+            function updateSunPosition() {
+                sun_degree += sun_movement;
+                if (sun_degree > 360) {
+                    sun_degree = 0;
+                }
+
+                var x = Math.sin(sun_degree * 0.0174533);
+                var y = Math.cos(sun_degree * 0.0174533);
+
+                var p = document.querySelector('#point-light');
+                var s = document.querySelector('#sun');
+
+                var current_daytime = is_daytime();
+                if (current_daytime != daytime) {
+                    var a = document.querySelector('#ambient-light');
+
+                    if (current_daytime) {
+                        p.setAttribute('light', 'intensity: 1.0');
+                        a.setAttribute('light', 'color: #05b; intensity: 1.0');
+                        s.setAttribute('light', 'intensity: 1.0');
+                    } else {
+                        p.setAttribute('light', 'intensity: 0.0');
+                        a.setAttribute('light', 'color: #fff; intensity: 0.3');
+                        s.setAttribute('light', 'intensity: 0');
+                    }
+
+                    daytime = current_daytime;
+                }
+
+                p.setAttribute('position', (x * 100) + " " + (y * 100) + " 0");
+                s.setAttribute('position', (x * 110) + " " + (y * 110) + " 0");
+
+                var d = document.querySelector('#debug');
+                d.setAttribute('value', 'Degree is ' + sun_degree + ' ' + daytime);
+            };
+
+            var scene = document.querySelector('a-scene');
+
+            for(var t in trees) {
+                var data = trees[t];
+                var tree = document.createElement('a-entity');
+
+                for(var a in data) {
+                    tree.setAttribute(a, data[a]);
+                }
+                scene.appendChild(tree);
+            }
+            setInterval(updateSunPosition, sun_interval);
+        </script>
+    </body>
+</html>
